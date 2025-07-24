@@ -3,7 +3,10 @@ import { connection } from '../dbConnection.js';
 
 export const createOrFetchUser = async (req, res, next) => {
     try {        
-        const user = req.cookies?.id;
+        const user = req.cookies && req.cookies?.id;
+
+        console.log(req.cookies);
+        console.log('user cookie', user);
         
         if (user) {
             // Fetch existing user by unq_id (use parameterized query for safety)
@@ -43,8 +46,8 @@ export const createOrFetchUser = async (req, res, next) => {
             // });
             res.cookie('id', uniqueId, {
                 maxAge: 1000 * 60 * 60 * 24 * 90, 
-                httpOnly: true, // Cookie is not accessible via JavaScript (security feature)
-                secure: false, // Set to true if you're using HTTPS, but for localhost use false
+                httpOnly: true,
+                secure: false, 
                 sameSite: 'Lax'
             });
 

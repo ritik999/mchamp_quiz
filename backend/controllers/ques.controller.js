@@ -14,9 +14,7 @@ export const getAllQue = async (req, res) => {
 
         const qDataParse = JSON.parse(qData);
         const aDataParse = JSON.parse(aData);
-        console.log(inputAns);
-        console.log(queSet);
-        console.log(completeTime);
+        console.log('qData', qData);
 
 
 
@@ -34,6 +32,7 @@ export const getAllQue = async (req, res) => {
 
 export const getAllQueOptandAns = async (req, res) => {
     try {
+        // const userAddress= req.params;
         const [rows] = await connection.query('SELECT Q.ques_id AS id,Q.ques_txt AS ques,Q.image_url AS image,A.answer_txt AS answer, O.option_txt AS options FROM (SELECT * FROM kbc_quiz_question ORDER BY RAND() LIMIT 10) Q JOIN kbc_quiz_question_answer A ON (A.ques_id=Q.ques_id) JOIN kbc_quiz_question_option O ON(O.ques_id=Q.ques_id)');
 
         const mergedData = rows.reduce((acc, item) => {
@@ -79,10 +78,13 @@ export const getAllQueOptandAns = async (req, res) => {
         quesDetailsArray.completeTime = Date.now();
 
         // await client.set(`dataDetails:${req.userId}`, JSON.stringify(quesDetailsArray));
-        const redisSet = client.set(`dataDetails:${req.userId}`, JSON.stringify(quesDetailsArray)).catch((err) => {
+        console.log(req.userId);
+        // console.log('data', quesDetailsArray);
+        const redisSet = await client.set(`dataDetails:${req.userId}`, JSON.stringify(quesDetailsArray), { EX: 3600 }).catch((err) => {
             console.error(err)
         })
 
+        console.log('redisSet', redisSet);
         res.status(200).json({ data: quesDetailsArray.questions, success: true });
     } catch (error) {
         res.status(404).json({ message: error.message, success: false });
@@ -99,8 +101,9 @@ export const evaluateSelectedOption = async (req, res) => {
             return res.status(400).send('Invalid input');
         }
 
+        console.log('user id', req.userId);
         // Fetch and parse data from Redis
-        const data = await client.get(`dataDetails:${JSON.stringify(req.userId)}`);
+        const data = await client.get(`dataDetails:${req.userId}`);
 
         const dataParse = JSON.parse(data);
 
@@ -110,9 +113,9 @@ export const evaluateSelectedOption = async (req, res) => {
             record.isCorrect = record.answer === selectedOption;
             record.selectedOption = selectedOption;
         }
-
+        console.log('record', record);
         // Save the updated data back to Redis
-        client.set(`dataDetails:${req.userId}`, JSON.stringify(dataParse)).catch((err) => {
+        await client.set(`dataDetails:${req.userId}`, JSON.stringify(dataParse), { EX: 3600 }).catch((err) => {
             console.error(err)
         });
 
@@ -152,7 +155,13 @@ export const sendFinalResult = async (req, res) => {
         // console.log('cmpTime',dataParse?.completeTime);
         // console.log(score);
 
-        const [rows] = await connection.query(`INSERT INTO tbl_contest_played(user_id,ques_id,correct_count,ques_attempted,skip_ques,answer_given,total_ques,coins_earned,done,time_taken) VALUES(${req.userId},'${queSet}',${score},10,0,'${inputAns.substring(0, inputAns.length - 1)}',10,5,1,${dataParse?.completeTime})`);
+        const [rows] = await connection.query(
+            `INSERT INTO tbl_contest_played(user_id, ques_id, correct_count, ques_attempted, skip_ques, answer_given, total_ques, coins_earned, done, time_taken) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [req.userId,queSet,score,10,0,inputAns.substring(0, inputAns.length - 1),10,5,1,dataParse?.completeTime
+            ]
+        );
+
+        await client.del(`dataDetails:${req.userId}`);
 
         res.status(200).json({ score: score });
     } catch (error) {
