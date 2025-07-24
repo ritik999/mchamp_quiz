@@ -36,7 +36,7 @@ const Winner = ({score}) => {
       </a>
     </div> */}
      <div class="desc_foot footernav"> <p>Copyright @ mChamp Entertainment Pvt Ltd </p>
-     <p>2024 All rights reserved.</p> </div>
+     <p>{new Date().getFullYear()} All rights reserved.</p> </div>
   </div>
   <div className="s_right" />
 </div>

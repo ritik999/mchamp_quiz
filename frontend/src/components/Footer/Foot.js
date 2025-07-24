@@ -9,7 +9,7 @@ const Foot = () => {
         <br>
         </br>
         <p>Copyright @ mChamp Entertainment Pvt Ltd </p>
-        <p>2024 All rights reserved.</p>{" "}
+        <p>{new Date().getFullYear()} All rights reserved.</p>{" "}
     </div>
     </>
   )

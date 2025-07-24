@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuthContext } from '../../context/AuthContext';
 import howplay from '../../assets/images/info.png';
 import { AnimatePresence, motion } from 'motion/react';
+import { uri } from '../../constants/api';
 
 const QuizPlay = () => {
   const nav = useNavigate();
@@ -27,7 +28,7 @@ const QuizPlay = () => {
       setError(null);
 
       try {
-        const res = await fetch(`http://192.168.4.53:2000/api/que/allque`, {
+        const res = await fetch(`${uri}/que/allque`, {
           headers: {
             "content-type": "application/json",
           },
@@ -61,7 +62,7 @@ const QuizPlay = () => {
       controlerRef.current = new AbortController();
       const signal = controlerRef.current.signal;
 
-      const res = await fetch(`http://192.168.4.53:2000/api/que/input/${id}`, {
+      const res = await fetch(`${uri}/que/input/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
